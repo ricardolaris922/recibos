@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             textY += 6; // Reduced space after Inquilino
             // Removed Departamento field
             // textY += 7; // Also removed this increment
-            doc.text(`La cantidad de: $${parseFloat(entry.monto || 0).toFixed(2)}`, textX, textY, { maxWidth: textMaxWidth });
+            doc.text(`La cantidad de: $${parseFloat(entry.monto || 0).toLocaleString('en-US')}`, textX, textY, { maxWidth: textMaxWidth });
             textY += 6; // Reduced space after Monto
             doc.text(`Del período:`, textX, textY);
             textY += 4; // Reduced space after "Del período:" label
