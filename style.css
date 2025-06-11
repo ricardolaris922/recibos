@@ -56,53 +56,63 @@ h1 {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 5px; /* Reduced gap for tighter integration */
+    gap: 15px; /* Gap between 'Desde group' and 'Hasta group' */
+    /* flex-wrap: wrap; */ /* Add if they should wrap on smaller screens */
 }
 
-/* Change flex order: label, then icon, then span */
-.periodo-container label {
-    order: 1; /* Correct */
+.date-field-group {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Gap between label, icon, and span within the group */
+    flex-grow: 1; /* Each group will take up equal space */
+    flex-basis: 0; /* Distribute space evenly */
+}
+
+.date-field-group label {
+    order: 1;
     flex-shrink: 0;
-    /* margin-right: 5px; */ /* REMOVED - rely on container gap */
     color: #ccc;
     margin-bottom: 0;
+    /* margin-right: 5px; was removed, relying on gap now */
 }
-.date-display-span {
-    order: 3; /* CHANGED from 2 to 3 */
+
+.date-field-group input[type="date"] {
+    order: 2;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    width: auto;
+    min-width: auto;
+    flex-grow: 0;
+    color: transparent;
+    margin-left: 0;
+    cursor: pointer;
+    /* Ensure color-scheme: dark is inherited or re-applied if needed */
+    color-scheme: dark; /* Re-apply for specificity */
+}
+
+.date-field-group .date-display-span { /* Scoped to .date-field-group */
+    order: 3;
     display: inline-block;
     padding: 10px;
     background-color: #333;
     color: #fff;
     border: 1px solid #666;
     border-radius: 4px;
-    min-width: 100px; /* "DD-Mon-YYYY" like "15-Ene-2024" */
-    text-align: left; /* Align text to left like a normal input */
-    flex-grow: 1;
-    font-size: 1em; /* Match general input font size */
-    line-height: normal; /* Match general input line height */
-    cursor: default; /* Indicate it's a display, not directly editable text */
-}
-.periodo-container input[type="date"] {
-    order: 2; /* CHANGED from 3 to 2 */
-    background-color: transparent;
-    border: none; /* Remove border */
-    padding: 0; /* Remove padding */
-    width: auto; /* Let it size to its content (the icon) */
-    min-width: auto; /* Override previous min-width */
-    flex-grow: 0; /* Don't let it grow */
-    color: transparent; /* Hide the native date text */
-
-    /* Specific styling to make icon more prominent if needed, browser-dependent */
-    margin-left: 0; /* CHANGED from -5px to 0, rely on flex-gap */
-    cursor: pointer; /* Ensure it looks clickable */
-    /* color-scheme: dark; should still apply from the general .entry input[type=date] */
+    min-width: 100px;
+    text-align: left;
+    flex-grow: 1; /* Span will take remaining space within its group */
+    font-size: 1em;
+    line-height: normal;
+    cursor: default;
 }
 
 /* Styling for the calendar picker indicator for Webkit browsers */
-.periodo-container input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) grayscale(1) brightness(1.5); /* Make it white/light grey */
-    padding: 5px; /* Add some padding around the icon to make it easier to click */
-    margin: 0; /* Reset any default margins on the icon */
+/* Keep this selector specific to input[type=date] within the group */
+.date-field-group input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) grayscale(1) brightness(1.5);
+    padding: 5px;
+    margin: 0;
     cursor: pointer;
 }
 

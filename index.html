@@ -17,13 +17,16 @@
                 <input type="text" class="entry-inquilino" placeholder="Inquilino">
                 <input type="number" class="entry-monto" placeholder="Monto de la Renta">
                 <div class="periodo-container">
-                    <label>Desde:</label>
-                    <input type="date" class="entry-periodo-from">
-                    <span class="date-display-span from-display-span"></span>
-
-                    <label style="margin-left: 10px;">Hasta:</label>
-                    <input type="date" class="entry-periodo-to">
-                    <span class="date-display-span to-display-span"></span>
+                    <div class="date-field-group">
+                        <label>Desde:</label>
+                        <input type="date" class="entry-periodo-from">
+                        <span class="date-display-span from-display-span"></span>
+                    </div>
+                    <div class="date-field-group">
+                        <label>Hasta:</label> <!-- Removed inline style="margin-left: 10px;" as spacing will be handled by .periodo-container's gap -->
+                        <input type="date" class="entry-periodo-to">
+                        <span class="date-display-span to-display-span"></span>
+                    </div>
                 </div>
                 <button class="prev-month-btn">Mes Previo</button>
                 <button class="next-month-btn">Próximo Mes</button>
