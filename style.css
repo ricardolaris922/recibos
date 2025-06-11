@@ -126,3 +126,48 @@ input::placeholder {
 .entry > button { /* Direct child buttons of .entry */
     margin-top: 5px;
 }
+
+/* Styles for the custom date display */
+.periodo-container {
+    position: relative; /* For potential absolute positioning of elements if needed, though not used in this version */
+    /* display: flex; and align-items: center; are already set */
+}
+
+.periodo-container input[type="date"] {
+    /* Make the text of the native date input less visible or invisible */
+    /* Option 1: Make text color same as background (if input bg is known) */
+    color: #333; /* Assuming input background is #333, change if different */
+    /* Option 2: Make text transparent - more robust */
+    /* color: transparent; */ /* This can have caret visibility issues, let's stick to matching bg for now */
+
+    /* Adjust width and padding if needed, but flex-grow:1 is already there */
+    /* We want user to primarily see the span, but input must be clickable for calendar */
+    padding-right: 5px; /* Reduce padding a bit if calendar icon is on the right */
+    min-width: 120px; /* Ensure it has some base width for clickability and icon */
+    flex-grow: 0.5; /* Reduce its desire to grow compared to the span */
+}
+
+.date-display-span {
+    display: inline-block;
+    padding: 10px;
+    background-color: #333; /* Match other input backgrounds */
+    color: #fff; /* Match other input text color */
+    border: 1px solid #666; /* Match other input borders */
+    border-radius: 4px;
+    min-width: 110px; /* e.g., "DD-Mon-YYYY" is around 11-12 chars */
+    text-align: center;
+    /* margin-left: -5px; */ /* Removed for now, rely on flex gap */
+    flex-grow: 1; /* Allow span to take up more space */
+    font-size: 0.9em; /* Slightly smaller if needed, or match input font size */
+    line-height: 1.2;
+}
+
+/* Adjusting the flex layout for label, input, and span within periodo-container */
+.periodo-container label {
+    flex-shrink: 0; /* Prevent label from shrinking */
+    margin-right: 5px; /* Ensure space after label */
+}
+
+/* If using the specific classes for targeting from/to spans for different styling (not used here yet) */
+/* .from-display-span { } */
+/* .to-display-span { } */

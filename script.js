@@ -16,6 +16,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return months[monthIndex];
     }
 
+    // Helper for abbreviated Spanish month names
+    function getSpanishShortMonth(monthIndex) {
+        const shortMonths = [
+            "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+            "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+        ];
+        return shortMonths[monthIndex];
+    }
+
+    function formatDateForDisplay(dateString) {
+        if (!dateString) return ''; // Return empty string if no date
+        const parts = dateString.split('-'); // YYYY-MM-DD
+        if (parts.length !== 3) return ''; // Basic validation
+
+        const year = parts[0];
+        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+        const day = parts[2];
+
+        // Create a date object to validate day/month and to easily get parts
+        const dateObj = new Date(year, month, day);
+
+        const formattedDay = day.toString().padStart(2, '0'); // Ensure two digits for day
+        const formattedShortMonth = getSpanishShortMonth(dateObj.getMonth());
+
+        return `${formattedDay}-${formattedShortMonth}-${year}`;
+    }
+
     function formatDate(dateString) {
         if (!dateString) return 'Fecha no especificada';
         // Ensure date is treated as local by splitting and creating new Date
@@ -71,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const montoInput = newEntryDiv.querySelector('.entry-monto');
         const periodoFromInput = newEntryDiv.querySelector('.entry-periodo-from');
         const periodoToInput = newEntryDiv.querySelector('.entry-periodo-to');
+        const fromDisplaySpan = newEntryDiv.querySelector('.from-display-span');
+        const toDisplaySpan = newEntryDiv.querySelector('.to-display-span');
         const removeBtn = newEntryDiv.querySelector('.remove-entry-btn');
         const prevMonthBtn = newEntryDiv.querySelector('.prev-month-btn');
         const nextMonthBtn = newEntryDiv.querySelector('.next-month-btn');
@@ -81,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
             montoInput.value = data.monto || '';
             periodoFromInput.value = data.periodoFrom || '';
             periodoToInput.value = data.periodoTo || '';
+            // Update display spans for loaded data
+            if(data.periodoFrom) fromDisplaySpan.textContent = formatDateForDisplay(data.periodoFrom);
+            if(data.periodoTo) toDisplaySpan.textContent = formatDateForDisplay(data.periodoTo);
         } else {
             // Set default dates for new entries if no data provided
             const today = new Date();
@@ -88,6 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
             periodoFromInput.valueAsDate = firstDayOfMonth;
             periodoToInput.valueAsDate = lastDayOfMonth;
+            // Update display spans for default new entry dates
+            fromDisplaySpan.textContent = formatDateForDisplay(periodoFromInput.value);
+            toDisplaySpan.textContent = formatDateForDisplay(periodoToInput.value);
         }
 
         // Event Listeners
@@ -110,7 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                         input.classList.contains('entry-monto') ? 'monto' :
                                         input.classList.contains('entry-periodo-from') ? 'periodoFrom' : 'periodoTo'] = input.value;
                     if (input.type === 'date') {
-                        validatePeriod(entryId); // Also updates DOM for periodoTo if changed
+                        const displaySpan = input.classList.contains('entry-periodo-from') ?
+                                            fromDisplaySpan : // Use already queried span
+                                            toDisplaySpan;   // Use already queried span
+                        if (displaySpan) {
+                            displaySpan.textContent = formatDateForDisplay(input.value);
+                        }
+                        validatePeriod(entryId);
                     }
                     saveEntries();
                 }
@@ -239,6 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update DOM and data store using YYYY-MM-DD format
     periodoFromInput.value = newFromDate.toISOString().split('T')[0];
     periodoToInput.value = newToDate.toISOString().split('T')[0];
+
+    // Update display spans after shiftMonth
+    const fromDisplaySpan = entryDiv.querySelector('.from-display-span');
+    const toDisplaySpan = entryDiv.querySelector('.to-display-span');
+    if (fromDisplaySpan) fromDisplaySpan.textContent = formatDateForDisplay(periodoFromInput.value);
+    if (toDisplaySpan) toDisplaySpan.textContent = formatDateForDisplay(periodoToInput.value);
 
     entryData.periodoFrom = periodoFromInput.value;
     entryData.periodoTo = periodoToInput.value;
