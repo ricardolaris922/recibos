@@ -48,21 +48,63 @@ h1 {
 
 .entry input[type="date"] {
     color-scheme: dark; /* Helps with date picker theme */
+    /* General styles for date inputs in entries, will be overridden by more specific below */
 }
 
+/* Styles for the custom date display */
 .periodo-container {
+    position: relative;
     display: flex;
-    gap: 10px; /* Space between label and input, and between date inputs */
     align-items: center;
+    gap: 5px; /* Reduced gap for tighter integration */
 }
 
+/* Change flex order: label, then span, then input(icon) */
 .periodo-container label {
-    color: #ccc; /* Lighter text for labels */
-    margin-bottom: 0; /* Align with inputs */
+    order: 1;
+    flex-shrink: 0;
+    margin-right: 5px;
+    color: #ccc; /* Copied from original */
+    margin-bottom: 0; /* Copied from original */
+}
+.date-display-span { /* This is the new visual field */
+    order: 2;
+    display: inline-block;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 4px;
+    min-width: 100px; /* "DD-Mon-YYYY" like "15-Ene-2024" */
+    text-align: left; /* Align text to left like a normal input */
+    flex-grow: 1;
+    font-size: 1em; /* Match general input font size */
+    line-height: normal; /* Match general input line height */
+    cursor: default; /* Indicate it's a display, not directly editable text */
+}
+.periodo-container input[type="date"] { /* This will now primarily be the icon */
+    order: 3;
+    background-color: transparent;
+    border: none; /* Remove border */
+    padding: 0; /* Remove padding */
+    width: auto; /* Let it size to its content (the icon) */
+    min-width: auto; /* Override previous min-width */
+    flex-grow: 0; /* Don't let it grow */
+    color: transparent; /* Hide the native date text */
+
+    /* Specific styling to make icon more prominent if needed, browser-dependent */
+    /* May need ::-webkit-calendar-picker-indicator styling for Chrome/Edge */
+    margin-left: -5px; /* Pull it closer to the span, adjust as needed */
+    cursor: pointer; /* Ensure it looks clickable */
+    /* color-scheme: dark; should still apply from the general .entry input[type=date] */
 }
 
-.periodo-container input[type="date"] {
-    flex-grow: 1; /* Allow date inputs to share space */
+/* Styling for the calendar picker indicator for Webkit browsers */
+.periodo-container input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) grayscale(1) brightness(1.5); /* Make it white/light grey */
+    padding: 5px; /* Add some padding around the icon to make it easier to click */
+    margin: 0; /* Reset any default margins on the icon */
+    cursor: pointer;
 }
 
 .entry button,
@@ -125,47 +167,6 @@ input::placeholder {
 /* Adjusting button layout within entry for better alignment */
 .entry > button { /* Direct child buttons of .entry */
     margin-top: 5px;
-}
-
-/* Styles for the custom date display */
-.periodo-container {
-    position: relative; /* For potential absolute positioning of elements if needed, though not used in this version */
-    /* display: flex; and align-items: center; are already set */
-}
-
-.periodo-container input[type="date"] {
-    /* Make the text of the native date input less visible or invisible */
-    /* Option 1: Make text color same as background (if input bg is known) */
-    color: #333; /* Assuming input background is #333, change if different */
-    /* Option 2: Make text transparent - more robust */
-    /* color: transparent; */ /* This can have caret visibility issues, let's stick to matching bg for now */
-
-    /* Adjust width and padding if needed, but flex-grow:1 is already there */
-    /* We want user to primarily see the span, but input must be clickable for calendar */
-    padding-right: 5px; /* Reduce padding a bit if calendar icon is on the right */
-    min-width: 120px; /* Ensure it has some base width for clickability and icon */
-    flex-grow: 0.5; /* Reduce its desire to grow compared to the span */
-}
-
-.date-display-span {
-    display: inline-block;
-    padding: 10px;
-    background-color: #333; /* Match other input backgrounds */
-    color: #fff; /* Match other input text color */
-    border: 1px solid #666; /* Match other input borders */
-    border-radius: 4px;
-    min-width: 110px; /* e.g., "DD-Mon-YYYY" is around 11-12 chars */
-    text-align: center;
-    /* margin-left: -5px; */ /* Removed for now, rely on flex gap */
-    flex-grow: 1; /* Allow span to take up more space */
-    font-size: 0.9em; /* Slightly smaller if needed, or match input font size */
-    line-height: 1.2;
-}
-
-/* Adjusting the flex layout for label, input, and span within periodo-container */
-.periodo-container label {
-    flex-shrink: 0; /* Prevent label from shrinking */
-    margin-right: 5px; /* Ensure space after label */
 }
 
 /* If using the specific classes for targeting from/to spans for different styling (not used here yet) */
