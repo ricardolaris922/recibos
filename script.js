@@ -19,9 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatDate(dateString) {
         if (!dateString) return 'Fecha no especificada';
         // Ensure date is treated as local by splitting and creating new Date
-        const parts = dateString.split('-');
-        const date = new Date(parts[0], parts[1] - 1, parts[2]);
-        return `${date.getDate()} de ${getSpanishMonth(date.getMonth())} de ${date.getFullYear()}`;
+    const parts = dateString.split('-'); // Expects YYYY-MM-DD
+    const date = new Date(parts[0], parts[1] - 1, parts[2]); // Month is 0-indexed
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = getSpanishMonth(date.getMonth());
+    const year = date.getFullYear();
+
+    return `${day} de ${month} de ${year}`;
     }
 
     function saveEntries() {
@@ -182,57 +187,63 @@ document.addEventListener('DOMContentLoaded', () => {
         const periodoFromInput = entryDiv.querySelector('.entry-periodo-from');
         const periodoToInput = entryDiv.querySelector('.entry-periodo-to');
 
-        let fromDate = periodoFromInput.valueAsDate ? new Date(periodoFromInput.valueAsDate.valueOf()) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        let toDate = periodoToInput.valueAsDate ? new Date(periodoToInput.valueAsDate.valueOf()) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+    let currentFromDate;
+    if (periodoFromInput.value) {
+        // Ensure date is parsed as local by appending time and using Date constructor
+        currentFromDate = new Date(periodoFromInput.value + 'T00:00:00');
+    } else {
+        // Fallback if date is not set (e.g., new entry before user interaction)
+        currentFromDate = new Date();
+        currentFromDate.setHours(0, 0, 0, 0); // Normalize to midnight
+        currentFromDate.setDate(1); // Default to 1st of current month
+    }
 
-        const originalFromDay = fromDate.getDate();
-        // const originalToDay = toDate.getDate(); // originalToDay is not directly used with duration method
+    const originalFromDay = currentFromDate.getDate();
 
-        // Calculate new From Date
-        let newFromDate = new Date(fromDate.valueOf());
-        newFromDate.setMonth(newFromDate.getMonth() + monthOffset);
-        // Adjust day if month change resulted in a shorter month (e.g. Jan 31 to Feb 28)
-        if (newFromDate.getDate() !== originalFromDay) {
-            newFromDate.setDate(0); // Go to last day of previous month
-        }
-        newFromDate.setDate(Math.min(originalFromDay, new Date(newFromDate.getFullYear(), newFromDate.getMonth() + 1, 0).getDate()));
+    // Calculate new "Desde" date
+    let newFromDate = new Date(currentFromDate.valueOf()); // Clone current date
+    newFromDate.setDate(1); // Set to 1st to avoid month skipping issues when adding/subtracting months
+    newFromDate.setMonth(newFromDate.getMonth() + monthOffset);
 
-        // Calculate new To Date by trying to maintain the original period's duration
-        const originalTimeDiff = toDate.getTime() - fromDate.getTime();
-        let newToDate = new Date(newFromDate.getTime() + originalTimeDiff);
+    // Get the number of days in the new target month for "Desde"
+    const daysInNewFromMonth = new Date(newFromDate.getFullYear(), newFromDate.getMonth() + 1, 0).getDate();
 
-        // If the original was end of month, try to keep it end of month
-        const fromDatePlusOneMonth = new Date(fromDate.getFullYear(), fromDate.getMonth() +1, 1);
-        const isLastDayFrom = fromDate.toDateString() === (new Date(fromDatePlusOneMonth.getFullYear(), fromDatePlusOneMonth.getMonth(), 0)).toDateString();
+    // Set the day for newFromDate, capped by the actual number of days in that month
+    newFromDate.setDate(Math.min(originalFromDay, daysInNewFromMonth));
 
-        const toDatePlusOneMonth = new Date(toDate.getFullYear(), toDate.getMonth()+1, 1);
-        const isLastDayTo = toDate.toDateString() === (new Date(toDatePlusOneMonth.getFullYear(), toDatePlusOneMonth.getMonth(),0)).toDateString();
+    // Calculate new "Hasta" date
+    // Preliminary "Hasta": one day before the "Desde" date would be in the *following* month.
+    let preliminaryHastaDate = new Date(newFromDate.valueOf()); // Clone newFromDate
+    preliminaryHastaDate.setMonth(preliminaryHastaDate.getMonth() + 1); // Advance by one month
+    preliminaryHastaDate.setDate(preliminaryHastaDate.getDate() - 1); // Go back one day
 
-        if(isLastDayFrom){
-            newFromDate = new Date(newFromDate.getFullYear(), newFromDate.getMonth()+1, 0);
-        }
-         if(isLastDayTo){
-            newToDate = new Date(newToDate.getFullYear(), newToDate.getMonth()+1, 0);
-        }
+    // Enforce 31-day maximum period (inclusive of start and end day)
+    let newToDate = new Date(preliminaryHastaDate.valueOf()); // Clone
 
-        // Final check: ensure toDate is after fromDate
-        if (newToDate < newFromDate) {
-            newToDate = new Date(newFromDate.getFullYear(), newFromDate.getMonth(), newFromDate.getDate());
-             // Attempt to maintain original duration if possible, otherwise just set to same day or default
-            const dayDiff = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
-            newToDate.setDate(newToDate.getDate() + dayDiff);
-            if(newToDate < newFromDate) newToDate = new Date(newFromDate.valueOf()); // Fallback
-        }
+    // Calculate difference in days (inclusive)
+    // getTime() returns UTC milliseconds. Difference is fine.
+    const timeDiffMs = newToDate.getTime() - newFromDate.getTime();
+    // Rounding handles potential DST shifts if dates were not normalized to midnight, but should be safe here.
+    const diffDaysInclusive = Math.round(timeDiffMs / (1000 * 60 * 60 * 24)) + 1;
 
+    if (diffDaysInclusive > 31) {
+        newToDate = new Date(newFromDate.valueOf()); // Clone newFromDate
+        newToDate.setDate(newFromDate.getDate() + 30); // Add 30 days to get a 31-day period
+    }
 
-        periodoFromInput.valueAsDate = newFromDate;
-        periodoToInput.valueAsDate = newToDate;
+    // Final safety check: ensure newToDate is not before newFromDate
+    if (newToDate < newFromDate) {
+        newToDate = new Date(newFromDate.valueOf()); // Set to be same as newFromDate if it somehow ended up earlier
+    }
 
-        entryData.periodoFrom = periodoFromInput.value;
-        entryData.periodoTo = periodoToInput.value;
+    // Update DOM and data store using YYYY-MM-DD format
+    periodoFromInput.value = newFromDate.toISOString().split('T')[0];
+    periodoToInput.value = newToDate.toISOString().split('T')[0];
 
-        validatePeriod(entryId); // This will also save
-        // saveEntries(); // Not needed here as validatePeriod calls it
+    entryData.periodoFrom = periodoFromInput.value;
+    entryData.periodoTo = periodoToInput.value;
+
+    saveEntries();
     }
 
     function printReceipts() {
@@ -272,22 +283,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const textMaxWidth = receiptWidth - 10;
 
             doc.setFontSize(10);
-            doc.text(`RECIBO DE ALQUILER`, currentX + receiptWidth / 2, textY, { align: 'center' });
-            textY += 7;
+            doc.text(`RECIBO DE DINERO`, currentX + receiptWidth / 2, textY, { align: 'center' });
+            textY += 6; // Reduced space after title
 
             doc.setFontSize(8);
             doc.text(`Recibí de: ${entry.inquilino || 'N/A'}`, textX, textY, { maxWidth: textMaxWidth });
-            textY += 7;
-            doc.text(`Departamento: ${entry.depto || 'N/A'}`, textX, textY, { maxWidth: textMaxWidth });
-            textY += 7;
+            textY += 6; // Reduced space after Inquilino
+            // Removed Departamento field
+            // textY += 7; // Also removed this increment
             doc.text(`La cantidad de: $${parseFloat(entry.monto || 0).toFixed(2)}`, textX, textY, { maxWidth: textMaxWidth });
-            textY += 7;
+            textY += 6; // Reduced space after Monto
             doc.text(`Del período:`, textX, textY);
-            textY += 5;
+            textY += 4; // Reduced space after "Del período:" label
             doc.text(`  Desde: ${formatDate(entry.periodoFrom)}`, textX + 2, textY, { maxWidth: textMaxWidth -2 });
-            textY += 5;
+            textY += 4; // Reduced space after Desde date
             doc.text(`  Hasta: ${formatDate(entry.periodoTo)}`, textX + 2, textY, { maxWidth: textMaxWidth -2});
-            textY += 10;
+            textY += 15; // Increased space before Firma line
 
             doc.text(`Firma: ____________________`, textX, textY, { maxWidth: textMaxWidth });
 
