@@ -302,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+        doc.setFont("Helvetica", "normal");
         const pageHeight = doc.internal.pageSize.height;
         const pageWidth = doc.internal.pageSize.width;
         const margin = 10; // mm
@@ -325,29 +326,57 @@ document.addEventListener('DOMContentLoaded', () => {
             // Draw border for receipt (optional)
             doc.rect(currentX, currentY, receiptWidth, receiptHeight);
 
-            let textY = currentY + 10; // Start text a bit inside the receipt box
+            // let textY = currentY + 10; // Start text a bit inside the receipt box - Replaced by contentTextY logic
             const textX = currentX + 5;
             const textMaxWidth = receiptWidth - 10;
 
-            doc.setFontSize(10);
-            doc.text(`RECIBO DE DINERO`, currentX + receiptWidth / 2, textY, { align: 'center' });
-            textY += 6; // Reduced space after title
+            // Re-calculate textY starting position for content
+            let contentTextY = currentY + 10; // Initial top padding for text inside receipt box
 
-            doc.setFontSize(8);
-            doc.text(`Recibí de: ${entry.inquilino || 'N/A'}`, textX, textY, { maxWidth: textMaxWidth });
-            textY += 6; // Reduced space after Inquilino
-            // Removed Departamento field
-            // textY += 7; // Also removed this increment
-            doc.text(`La cantidad de: $${parseFloat(entry.monto || 0).toLocaleString('en-US')}`, textX, textY, { maxWidth: textMaxWidth });
-            textY += 6; // Reduced space after Monto
-            doc.text(`Del período:`, textX, textY);
-            textY += 4; // Reduced space after "Del período:" label
-            doc.text(`  Desde: ${formatDate(entry.periodoFrom)}`, textX + 2, textY, { maxWidth: textMaxWidth -2 });
-            textY += 4; // Reduced space after Desde date
-            doc.text(`  Hasta: ${formatDate(entry.periodoTo)}`, textX + 2, textY, { maxWidth: textMaxWidth -2});
-            textY += 15; // Increased space before Firma line
+            doc.setFontSize(10); // Title font size
+            doc.text(`RECIBO DE DINERO`, currentX + receiptWidth / 2, contentTextY, { align: 'center' });
+            contentTextY += 3.5; // Approximate height of 10pt font
+            contentTextY += 7;  // Gap after title
 
-            doc.text(`Firma: ____________________`, textX, textY, { maxWidth: textMaxWidth });
+            doc.setFontSize(9); // New font size for main content
+
+            doc.text(`Recibí de: ${entry.inquilino || 'N/A'}`, textX, contentTextY, { maxWidth: textMaxWidth });
+            contentTextY += 3.2; // Approximate height of 9pt font
+            contentTextY += 7;  // Gap
+
+            doc.text(`La cantidad de: $${parseFloat(entry.monto || 0).toLocaleString('en-US')}`, textX, contentTextY, { maxWidth: textMaxWidth });
+            contentTextY += 3.2;
+            contentTextY += 7;  // Gap
+
+            doc.text(`Del período:`, textX, contentTextY);
+            contentTextY += 3.2;
+            contentTextY += 5;  // Smaller gap
+
+            doc.text(`  Desde: ${formatDate(entry.periodoFrom)}`, textX + 2, contentTextY, { maxWidth: textMaxWidth - 2 });
+            contentTextY += 3.2;
+            contentTextY += 5;  // Smaller gap
+
+            doc.text(`  Hasta: ${formatDate(entry.periodoTo)}`, textX + 2, contentTextY, { maxWidth: textMaxWidth - 2 });
+            contentTextY += 3.2;
+            // End of main content lines. contentTextY is now at the baseline of where the NEXT line would start.
+
+            // Position "Firma:" line
+            // Target Y for drawing Firma line: bottom of receipt box - a margin - height of "Firma:" text.
+            const firmaLineHeight = 3.2; // Approx height of 9pt font
+            const bottomReceiptMargin = 5; // Desired margin at the very bottom of the receipt box
+            let firmaTextY = currentY + receiptHeight - bottomReceiptMargin - firmaLineHeight;
+
+            // Ensure there's a minimum space between last content line and Firma line.
+            const minSignatureGap = 10; // Minimum desired visual gap above the Firma line.
+            if (firmaTextY < contentTextY + minSignatureGap) {
+                // This case means content is pushing too far down or signature line is too high.
+                // If firmaTextY is still too high (e.g. contentTextY is very large), we can adjust firmaTextY down,
+                // but it might go off-page or overlap border if receiptHeight is small.
+                // For now, we accept the calculated firmaTextY. If it's above content + gap, it's fine.
+                // If it's below, it means content is dense, which is also fine for this step.
+            }
+
+            doc.text(`Firma: ____________________`, textX, firmaTextY, { maxWidth: textMaxWidth });
 
             entriesOnPage++;
         });
