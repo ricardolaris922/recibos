@@ -59,16 +59,16 @@ h1 {
     gap: 5px; /* Reduced gap for tighter integration */
 }
 
-/* Change flex order: label, then span, then input(icon) */
+/* Change flex order: label, then icon, then span */
 .periodo-container label {
-    order: 1;
+    order: 1; /* Correct */
     flex-shrink: 0;
-    margin-right: 5px;
-    color: #ccc; /* Copied from original */
-    margin-bottom: 0; /* Copied from original */
+    /* margin-right: 5px; */ /* REMOVED - rely on container gap */
+    color: #ccc;
+    margin-bottom: 0;
 }
-.date-display-span { /* This is the new visual field */
-    order: 2;
+.date-display-span {
+    order: 3; /* CHANGED from 2 to 3 */
     display: inline-block;
     padding: 10px;
     background-color: #333;
@@ -82,8 +82,8 @@ h1 {
     line-height: normal; /* Match general input line height */
     cursor: default; /* Indicate it's a display, not directly editable text */
 }
-.periodo-container input[type="date"] { /* This will now primarily be the icon */
-    order: 3;
+.periodo-container input[type="date"] {
+    order: 2; /* CHANGED from 3 to 2 */
     background-color: transparent;
     border: none; /* Remove border */
     padding: 0; /* Remove padding */
@@ -93,8 +93,7 @@ h1 {
     color: transparent; /* Hide the native date text */
 
     /* Specific styling to make icon more prominent if needed, browser-dependent */
-    /* May need ::-webkit-calendar-picker-indicator styling for Chrome/Edge */
-    margin-left: -5px; /* Pull it closer to the span, adjust as needed */
+    margin-left: 0; /* CHANGED from -5px to 0, rely on flex-gap */
     cursor: pointer; /* Ensure it looks clickable */
     /* color-scheme: dark; should still apply from the general .entry input[type=date] */
 }
